@@ -1,3 +1,5 @@
+import numpy as np
+
 class Neuron:
     def __init__(self, name = ''):
         self.name = name
@@ -18,18 +20,34 @@ class Layer:
     def __init__(self, neurons = []):
         self.input_stream = None
         self.neurons = neurons
+        self.weights = None
+        self.bias = None
 
     def __rshift__(self, other):
         other.input_stream = self
 
+    def input_data(self):
+        output = self.input_stream.output()
+        return output
+
     def output(self):
-        return self.input_stream.output()
+        input_data = self.input_data()
+        return self.weights.dot(input_data) + self.bias
+
+    def layer_size(self):
+        return len(self.neurons)
+
+    def ouput_shape(self):
+        return len(self.neurons)
+
 
     def forward_pass(self):
         return self.output()
 
-    def pipe(next_layer):
-        pass
+    def init(self):
+        self.weights = np.random.randn(self.layer_size(), self.input_stream.layer_size())
+        self.bias = np.zeros((self.layer_size(), 1))
+
 
 class InputLayer(Layer):
     def __init__(self, neurons):
@@ -39,7 +57,9 @@ class InputLayer(Layer):
         self.data = feed_dict
 
     def output(self):
-        return [ self.data[neuron.name] for neuron in self.neurons ]
+        output = np.array([ self.data[neuron.name] for neuron in self.neurons ])
+        output = output[np.newaxis].T
+        return output
 
 class NeuralNet:
     def __init__(self):
@@ -74,6 +94,11 @@ class NeuralNet:
         self.input_layer.feed(feed_dict)
         return self.output_layer.output()
 
+    def init(self):
+        for layer in self.hidden_layers:
+            layer.init()
+        self.output_layer.init()
+
 inputs = [Neuron(name) for name in ['x', 'y']]
 input_layer = InputLayer(inputs)
 
@@ -87,6 +112,6 @@ nn = NeuralNet()
 nn.inputs( input_layer )
 nn.hidden( hidden_layer_1 )
 nn.outputs( output_layer )
-
+nn.init()
 prediction = nn.predict({'x': 1, 'y': 2})
 print(prediction)
