@@ -1,27 +1,27 @@
 import numpy as np
+from tinyflow_utilities import softmax, softmax_backward, sigmoid, sigmoid_backward, relu, relu_backward
 
 class Neuron:
     def __init__(self, name = ''):
         self.name = name
 
-class Sigmoid(Neuron):
-    def __init__(self):
-        pass
-    def forward_pass():
-        pass
-
-class Relu(Neuron):
-    def __init__(self):
-        pass
-    def forward_pass():
-        pass
-
 class Layer:
-    def __init__(self, neurons = []):
+    def __init__(self, neurons = [], type=''):
         self.input_stream = None
         self.neurons = neurons
         self.weights = None
         self.bias = None
+        self.Z = None
+        self.type = type
+        if self.activation == 'sigmoid':
+            self.activation = sigmoid
+            self.activation_derivative = sigmoid_backward
+        elif self.activation == 'relu':
+            self.activation = relu
+            self.activation_derivative = relu_backward
+        elif self.activation == 'softmax':
+            self.activation = softmax
+            self.activation_derivative = softmax_backward
 
     def __rshift__(self, other):
         other.input_stream = self
@@ -32,7 +32,10 @@ class Layer:
 
     def output(self):
         input_data = self.input_data()
-        return self.weights.dot(input_data) + self.bias
+        Z = self.weights.dot(input_data) + self.bias
+        self.Z = Z
+        A = self.activation(Z)
+        return A
 
     def layer_size(self):
         return len(self.neurons)
@@ -66,6 +69,7 @@ class NeuralNet:
         self.input_layer = None
         self.output_layer = None
         self.hidden_layers = []
+        self.labels = None
 
     def train(self, train_data, label):
         pass
@@ -87,8 +91,11 @@ class NeuralNet:
         self.hidden_layers.append(layer)
         return self
 
-    def forward_pass(self):
-        self.output_layer.output()
+    def forward_pass(self, feed_dict, labels):
+        self.input_layer.feed(feed_dict)
+        output = self.output_layer.output()
+        cost = self.output_layer.cost(output, labels)
+        return output, cost
 
     def predict(self, feed_dict):
         self.input_layer.feed(feed_dict)
@@ -102,16 +109,19 @@ class NeuralNet:
 inputs = [Neuron(name) for name in ['x', 'y']]
 input_layer = InputLayer(inputs)
 
-hidden_neurons = [Relu() for i in range(3)]
-hidden_layer_1 = Layer(hidden_neurons)
+hidden_neurons = [Neuron() for i in range(3)]
+hidden_layer_1 = Layer(hidden_neurons, type='relu')
 
-output_neurons = [Sigmoid() for i in range(3)]
-output_layer = Layer(output_neurons)
+output_neurons = [Neuron() for i in range(2)]
+output_layer = Layer(output_neurons, type='sigmoid')
 
 nn = NeuralNet()
 nn.inputs( input_layer )
 nn.hidden( hidden_layer_1 )
 nn.outputs( output_layer )
 nn.init()
-prediction = nn.predict({'x': 1, 'y': 2})
+labels = np.array([[0 , 1], [1, 0]])
+data = {'x': 1, 'y': 2}
+prediction = nn.predict(data)
 print(prediction)
+# forward_pass(prediction)
