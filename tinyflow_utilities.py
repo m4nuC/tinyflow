@@ -21,7 +21,7 @@ def softmax(Z):
     Z -- numpy array of any shape
     """
     exps = np.exp(Z)
-    return exps / np.sum(exps, axis=1, keepdims=True)
+    return exps / np.sum(exps, axis=0, keepdims=True)
 
 def relu(Z):
     """
@@ -40,38 +40,20 @@ def relu(Z):
 
     return A
 
-def softmax_backward(A, Y):
+def softmax_backward(Y_hat, Y):
     """
     Compute softmax derivative.
 
     A -- numpy array of any shape
     """
-    return A - Y
+    return Y_hat - Y
 
 
-def relu_backward(dA, cache):
-    """
-    Implement the backward propagation for a single RELU unit.
+def relu_backward(Z):
+    return 1. * (Z > 0)
 
-    Arguments:
-    dA -- post-activation gradient, of any shape
-    cache -- 'Z' where we store for computing backward propagation efficiently
 
-    Returns:
-    dZ -- Gradient of the cost with respect to Z
-    """
-
-    Z = cache
-    dZ = np.array(dA, copy=True) # just converting dz to a correct object.
-
-    # When z <= 0, you should set dz to 0 as well.
-    dZ[Z <= 0] = 0
-
-    assert (dZ.shape == Z.shape)
-
-    return dZ
-
-def sigmoid_backward(dA, cache):
+def sigmoid_backward(dA, Z):
     """
     Implement the backward propagation for a single SIGMOID unit.
 
@@ -82,8 +64,6 @@ def sigmoid_backward(dA, cache):
     Returns:
     dZ -- Gradient of the cost with respect to Z
     """
-
-    Z = cache
 
     s = 1/(1+np.exp(-Z))
     dZ = dA * s * (1-s)
